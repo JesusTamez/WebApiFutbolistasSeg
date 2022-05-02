@@ -13,16 +13,12 @@ namespace WebApiFutbolistasSeg.Controllers
     {
         private readonly ApplicationDbContext dbContext;
         private readonly IMapper mapper;
-        private readonly IWebHostEnvironment env;
-        private readonly string nombreArchivo = "nuevosRegistros.txt";
-        private readonly string nombreArchivo2 = "registroConsultado.txt";
-        private Timer timer;
 
-        public FutbolistasController(ApplicationDbContext context, IMapper mapper, IWebHostEnvironment env)
+        public FutbolistasController(ApplicationDbContext context, IMapper mapper)
         {
             this.dbContext = context;
             this.mapper = mapper;
-            this.env = env;
+            
         }
 
         [HttpGet]
@@ -33,63 +29,62 @@ namespace WebApiFutbolistasSeg.Controllers
         }
 
 
-    [HttpGet("{id:int}")]
-        public async Task<ActionResult<GetFutbolistaDTO>> Get(int id)
+        [HttpGet("{id:int}", Name = "obtenerfutbolista")]
+        public async Task<ActionResult<FutbolistaDTOConEquipos>> Get(int id)
         {
-            var futbolista = await dbContext.Futbolistas.FirstOrDefaultAsync(futbolistaBD => futbolistaBD.Id == id);
+            var futbolista = await dbContext.Futbolistas
+                .Include(futbolistaDB => futbolistaDB.FutbolistaEquipo)
+                .ThenInclude(futbolistaEquipoDB => futbolistaEquipoDB.Equipo)
+                .FirstOrDefaultAsync(futbolistaDB => futbolistaDB.Id == id);
+            
+            if(futbolista == null)
             {
                 return NotFound();
             }
 
-            return mapper.Map<GetFutbolistaDTO>(futbolista);
+            return mapper.Map<FutbolistaDTOConEquipos>(futbolista);
         }
 
         [HttpGet("{nombre}")]
         public async Task<ActionResult<List<GetFutbolistaDTO>>> Get([FromRoute] string nombre)
         {
             var futbolistas = await dbContext.Futbolistas.Where(futbolistaBD => futbolistaBD.Nombre.Contains(nombre)).ToListAsync();
-            var ruta = $@"{env.ContentRootPath}\wwwroot\{nombreArchivo2}";
-            using (StreamWriter writer = new StreamWriter(ruta, append: true))
-            { writer.WriteLine($@"Datos Consultados: {nombre}"); }
             return mapper.Map<List<GetFutbolistaDTO>>(futbolistas);
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromBody]FutbolistaDTO futbolistaDTO)
+        public async Task<ActionResult> Post([FromBody]FutbolistaDTO futbolistaDto)
         {
-            var existeFutbolistaMismoNombre = await dbContext.Futbolistas.AnyAsync(x => x.Nombre == futbolistaDTO.Nombre);
+            var existeFutbolistaMismoNombre = await dbContext.Futbolistas.AnyAsync(x => x.Nombre == futbolistaDto.Nombre);
 
             if (existeFutbolistaMismoNombre)
             {
-                return BadRequest($"Ya existe un futbolista con el nombre {futbolistaDTO.Nombre}");
+                return BadRequest($"Ya existe un futbolista con el nombre {futbolistaDto.Nombre}");
             }
 
-            var futbolista = mapper.Map<Futbolista>(futbolistaDTO);
+            var futbolista = mapper.Map<Futbolista>(futbolistaDto);
             dbContext.Add(futbolista);
-            var ruta = $@"{env.ContentRootPath}\wwwroot\{nombreArchivo}";
-            using (StreamWriter writer = new StreamWriter(ruta, append: true))
-            { writer.WriteLine($@"Datos Ingresados: {futbolista.Id},{futbolista.Nombre}"); }
             await dbContext.SaveChangesAsync();
-            return Ok();
+
+            var futbolistaDTO = mapper.Map<GetFutbolistaDTO>(futbolista);
+            return CreatedAtRoute("obtenerfutbolista", new {id = futbolista.Id},futbolistaDTO);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<ActionResult> Put(Futbolista futbolista, int id)
+        public async Task<ActionResult> Put(FutbolistaDTO futbolistaCreacionDTO, int id)
         {
-            var exist = await dbContext.Futbolistas.AnyAsync(x =>x.Id == id);
+            var exist = await dbContext.Futbolistas.AnyAsync(x => x.Id == id);
             if (!exist)
             {
                 return NotFound();
             }
 
-            if(futbolista.Id != id)
-            {
-                return BadRequest("El id del futbolista no coincide con el establecido en la url. ");
-            }
+            var futbolista = mapper.Map<Futbolista>(futbolistaCreacionDTO);
+            futbolista.Id = id;
 
             dbContext.Update(futbolista);
             await dbContext.SaveChangesAsync();
-            return Ok();
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]

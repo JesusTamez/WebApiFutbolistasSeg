@@ -1,17 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using WebApiFutbolistasSeg.Validaciones;
 
-namespace WebApiFutbolistasSeg.Entidades
+namespace WebApiFutbolistasSeg.DTOs
 {
-    public class Equipo
+    public class EquipoPatchDTO
     {
-        public int Id { get; set; }
-
+        [Required]
         [StringLength(maximumLength: 250, ErrorMessage = "El campo {0} solo puede tener hasta 250 caracteres")]
         [PrimeraLetraMayuscula]
         public string Nombre { get; set; }
 
-        public List<Ligas> Ligas { get; set; }
-        public List<FutbolistaEquipo> FutbolistaEquipo { get; set; }
+        public DateTime FechaCreacion { get; set; }
     }
 }

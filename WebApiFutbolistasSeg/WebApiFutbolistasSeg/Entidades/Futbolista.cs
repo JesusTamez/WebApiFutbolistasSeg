@@ -12,7 +12,6 @@ namespace WebApiFutbolistasSeg.Entidades
         [PrimeraLetraMayuscula]
         public string Nombre { get; set; }
 
-
-        public List<Equipo> equipos { get; set; }
+        public List<FutbolistaEquipo> FutbolistaEquipo { get; set; }
     }
 }

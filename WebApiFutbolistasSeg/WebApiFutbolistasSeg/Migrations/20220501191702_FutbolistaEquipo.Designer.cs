@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApiFutbolistasSeg;
 
@@ -10,9 +11,11 @@ using WebApiFutbolistasSeg;
 namespace WebApiFutbolistasSeg.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220501191702_FutbolistaEquipo")]
+    partial class FutbolistaEquipo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,28 +78,6 @@ namespace WebApiFutbolistasSeg.Migrations
                     b.ToTable("FutbolistaEquipo");
                 });
 
-            modelBuilder.Entity("WebApiFutbolistasSeg.Entidades.Ligas", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Campeonato")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("EquipoId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EquipoId");
-
-                    b.ToTable("Ligas");
-                });
-
             modelBuilder.Entity("WebApiFutbolistasSeg.Entidades.FutbolistaEquipo", b =>
                 {
                     b.HasOne("WebApiFutbolistasSeg.Entidades.Equipo", "Equipo")
@@ -116,22 +97,9 @@ namespace WebApiFutbolistasSeg.Migrations
                     b.Navigation("Futbolista");
                 });
 
-            modelBuilder.Entity("WebApiFutbolistasSeg.Entidades.Ligas", b =>
-                {
-                    b.HasOne("WebApiFutbolistasSeg.Entidades.Equipo", "Equipo")
-                        .WithMany("Ligas")
-                        .HasForeignKey("EquipoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Equipo");
-                });
-
             modelBuilder.Entity("WebApiFutbolistasSeg.Entidades.Equipo", b =>
                 {
                     b.Navigation("FutbolistaEquipo");
-
-                    b.Navigation("Ligas");
                 });
 
             modelBuilder.Entity("WebApiFutbolistasSeg.Entidades.Futbolista", b =>
